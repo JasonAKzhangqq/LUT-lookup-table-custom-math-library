@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <math.h>
 
-// ����Ƕȵķ�Χ�;��ȣ��Ի���Ϊ��λ��
+// 常用的值，以及相关配置
 #define M_PI       3.1415926535897932
 #define M_PI_M2    6.2831853071795862        //pi*2
 #define M_PI_D2    1.5707963267948965        //pi/2 
@@ -10,9 +10,9 @@
 #define RADIAN_MIN -M_PI_D2
 #define RADIAN_MAX M_PI_D2
 #define RADIAN_STEP 0.001
-#define TABLE_SIZE ((int)( M_PI_D2 / RADIAN_STEP ) + 1 )//ֻ����0��PI/2��ֵ
+#define TABLE_SIZE ((int)( M_PI_D2 / RADIAN_STEP ) + 1 )//ֻ只记录0到pi/2的表
 
-// ������ұ�
+// 各个表
 double sin_table[TABLE_SIZE];
 //double cos_table[TABLE_SIZE];
 //double tan_table[TABLE_SIZE];
@@ -20,7 +20,7 @@ double sin_table[TABLE_SIZE];
 //double arccos_table[TABLE_SIZE];
 double arctan_table[TABLE_SIZE];
 
-// ��ʼ�����ұ�
+// 表初始化
 void init_tables() {
     for (int i = 0; i < (TABLE_SIZE - 1); i++) {
         double radian =((i * RADIAN_STEP));
@@ -42,7 +42,8 @@ void init_tables() {
 //    }
 //    return closest_index;
 //}
-// ���ұ�����ӽ��ĽǶ�����
+// 
+// 二分法查表
 int find_closest_index(double value, double* table) {
     int left = 0;
     int right = TABLE_SIZE - 1;
@@ -65,7 +66,7 @@ int find_closest_index(double value, double* table) {
             left = mid + 1;
         }
         else {
-            return mid; // �ҵ���ȷƥ��
+            return mid; 
         }
     }
 
@@ -73,9 +74,9 @@ int find_closest_index(double value, double* table) {
 }
 
 
-// �����Ǻ���ֱ�Ӳ����ͨ������Ե�����Եͣ��м䲿���ڿ�紦��һ�������Ȳ���
+// sin查表
 double sin_lookup(double radian) {
-    //������Ƕ��޶���-pi��pi
+    //把表限制在-pi到pi
     while (radian < -M_PI)
     {
         radian += M_PI_M2;
@@ -85,17 +86,17 @@ double sin_lookup(double radian) {
         radian -= M_PI_M2;
     }
 
-    //��������ӳ�䵽���ұ�,
+    //查表
     if (radian < 0)
     {
         if (radian < -M_PI_D2)
         {
-            //-pi��-pi/2���յ���ʽ
+            //-pi到-pi/2诱导公式
             return -sin_table[(int)(((M_PI +radian) / RADIAN_STEP))];
         }
         else
         {
-            //-pi/2��0���յ���ʽ
+            //-pi/2到0诱导公式
             return -sin_table[(int)(((-radian) / RADIAN_STEP))];
         }
     }
@@ -103,12 +104,12 @@ double sin_lookup(double radian) {
     {
         if (radian < M_PI_D2)
         {
-            //0��pi/2��ֱ��ӳ��
+            //0到pi/2直接查表
             return sin_table[(int)(((radian) / RADIAN_STEP) )];
         }
         else
         {
-            //pi/2��pi���յ���ʽ
+            //pi/2到pi诱导公式
             return sin_table[(int)(((M_PI-radian) / RADIAN_STEP)+0)];
         }
     }
@@ -116,13 +117,13 @@ double sin_lookup(double radian) {
 
 double cos_lookup(double radian)
 {
-    //�յ���ʽ
+    //诱导公式
     return sin_lookup(M_PI_D2 - radian);
 }
 
 double tan_lookup(double radian)
 {
-    //��Ч��ʽ
+    //转换公式
     return (sin_lookup(radian) / cos_lookup(radian));
 }
 
@@ -216,9 +217,9 @@ double tan_lookup(double radian)
 //}
 
 int main() {
-    // ��ʼ�����ұ�
+    // 初始表
     init_tables();
-    //�������
+    // 测试
     for (int i = 0; i < TABLE_SIZE; i++)
     {
         printf("%.15f,\n", arctan_table[i]);
