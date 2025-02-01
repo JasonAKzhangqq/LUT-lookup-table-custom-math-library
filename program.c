@@ -7,7 +7,7 @@
 double sin_table[TABLE_SIZE];
 //double cos_table[TABLE_SIZE];
 double tan_table[TABLE_SIZE];
-//double arcsin_table[TABLE_SIZE];
+double arcsin_table[TABLE_SIZE];
 //double arccos_table[TABLE_SIZE];
 double arctan_table[TABLE_SIZE];
 
@@ -17,23 +17,13 @@ void init_tables() {
         double radian =((i * RADIAN_STEP));
         sin_table[i] = sin(radian);
         tan_table[i] = tan(radian);
-        arctan_table[i] = atan(tan(radian));
+        arcsin_table[i] = asin(sin_table[i]);
+        arctan_table[i] = atan(tan_table[i]);
     }
-    sin_table[TABLE_SIZE - 1] = 1.00;
+    sin_table[TABLE_SIZE - 1] = 1.0;
+    tan_table[TABLE_SIZE - 1] = HUGE_VAL;
     arctan_table[TABLE_SIZE - 1] = M_PI_D2;
 }
-//int find_closest_index(double value, double* table) {
-//    int closest_index = 0;
-//    double closest_diff = fabs(value - table[0]);
-//    for (int i = 1; i < TABLE_SIZE; i++) {
-//        double diff = fabs(value - table[i]);
-//        if (diff < closest_diff) {
-//            closest_diff = diff;
-//            closest_index = i;
-//        }
-//    }
-//    return closest_index;
-//}
 
 //浮点型绝对值
 double Abs_float(double a)
@@ -44,6 +34,14 @@ double Abs_float(double a)
     }
     else
         return (a * -(1.0));
+}
+
+//比较浮点数是否相等
+_Bool judge_float_equal(double value_1, double value_2)
+{
+    //阈值可以自行设置，这里认为两值相差小于1e-4即相等
+    if (Abs_float(value_1 - value_2) < 1.0e-4)return 1;
+    return 0;
 }
 
 //牛顿逼近法开方
@@ -111,10 +109,9 @@ int find_closest_index(double value, double* table) {
     return closest_index;
 }
 
-
-// sin查表
+// 正三角函数查表
 double sin_lookup(double radian) {
-    //把表限制在-pi到pi
+    //把输入值限制在-pi到pi
     while (radian < -M_PI)
     {
         radian += M_PI_M2;
@@ -161,8 +158,25 @@ double cos_lookup(double radian)
 
 double tan_lookup(double radian)
 {
-    //转换公式
-    return (sin_lookup(radian) / cos_lookup(radian));
+    //把输入值限制在-pi/2到pi/2
+    while (radian < -M_PI_D2)
+    {
+        radian += M_PI;
+    }
+    while (radian > M_PI_D2)
+    {
+        radian -= M_PI;
+    }
+
+    //查表
+    if (radian > 0)
+    {
+        return tan_table[(int)((radian) / RADIAN_STEP)];
+    }
+    else
+    {
+        return -tan_table[(int)((-radian) / RADIAN_STEP)];
+    }
 }
 
 // ʹ�ò��ұ����� arcsin
@@ -185,78 +199,105 @@ double tan_lookup(double radian)
 //    return arccos_table[index];
 //}
 //
-// ʹ�ò��ұ����� arctan
+// 查表法实现atan
 double arctan_lookup(double value) {
-    int index = find_closest_index(value, tan_table);
-    return arctan_table[index];
+    if (value > 0)
+    {
+        return arctan_table[find_closest_index(value, tan_table)];
+    }
+    else
+    {
+        return -arctan_table[find_closest_index((-value), tan_table)];
+    }
 }
-//
-//// ʹ�ò��ұ����� atan2
-//double atan2_lookup(double y, double x) {
-//    double angle = atan2(y, x);
-//    if (angle < RADIAN_MIN || angle > RADIAN_MAX) {
-//        printf("Error: Angle out of range.\n");
-//        return 0.0;
-//    }
-//    int index = (int)((angle - RADIAN_MIN) / RADIAN_STEP);
-//    return arctan_table[index];
-//}
-//void create_table(void)
-//{
-//    
-//        printf("const double sin_table[TABLE_SIZE]=\n");
-//        printf("{\n");
-//        for (int i = 0; i < TABLE_SIZE; i++)
-//        {
-//            printf("%.15f,\n", sin_table[i]);
-//        }
-//        printf("};\n");
-//
-//        printf("const double cos_table[TABLE_SIZE]=\n");
-//        printf("{\n");
-//        for (int i = 0; i < TABLE_SIZE; i++)
-//        {
-//            printf("%.15f,\n", cos_table[i]);
-//        }
-//        printf("};\n");
-//
-//        printf("const double tan_table[TABLE_SIZE]=\n");
-//        printf("{\n");
-//        for (int i = 0; i < TABLE_SIZE; i++)
-//        {
-//            printf("%.15f,\n", tan_table[i]);
-//        }
-//        printf("};\n");
-//
-//        printf("const double arcsin_table[TABLE_SIZE]=\n");
-//        printf("{\n");
-//        for (int i = 0; i < TABLE_SIZE; i++)
-//        {
-//            printf("%.15f,\n", arcsin_table[i]);
-//        }
-//        printf("};\n");
-//
-//        printf("const double arccos_table[TABLE_SIZE]=\n");
-//        printf("{\n");
-//        for (int i = 0; i < TABLE_SIZE; i++)
-//        {
-//            printf("%.15f,\n", arccos_table[i]);
-//        }
-//        printf("};\n");
-//
-//        printf("const double arctan_table[TABLE_SIZE]=\n");
-//        printf("{\n");
-//        for (int i = 0; i < TABLE_SIZE; i++)
-//        {
-//            printf("%.15f,\n", arctan_table[i]);
-//        }
-//        printf("};\n");
-//    
-//}
+
+// 查表法实现atan2
+double atan2_lookup(double y, double x) {
+    double value = ((y / x));
+    double atan_value = 0;
+    if (judge_float_equal(x,0)) {
+        if (y > 0) {
+            return M_PI_D2;
+        }
+        else if (y < 0) {
+            return -M_PI_D2;
+        }
+        else {
+            return 0;
+        }
+    }
+
+    atan_value = arctan_lookup(value);
+
+    if (x > 0) {
+        return atan_value;
+    }
+    else if (y >= 0) {
+        return atan_value + M_PI; 
+    }
+    else {
+        return atan_value - M_PI; 
+    }
+
+
+}
+
+void create_table(void)
+{
+    
+        printf("const double sin_table[TABLE_SIZE]=\n");
+        printf("{\n");
+        for (int i = 0; i < TABLE_SIZE; i++)
+        {
+            printf("%.15f,\n", sin_table[i]);
+        }
+        printf("};\n");
+
+        //printf("const double cos_table[TABLE_SIZE]=\n");
+        //printf("{\n");
+        //for (int i = 0; i < TABLE_SIZE; i++)
+        //{
+        //    printf("%.15f,\n", cos_table[i]);
+        //}
+        //printf("};\n");
+
+        printf("const double tan_table[TABLE_SIZE]=\n");
+        printf("{\n");
+        for (int i = 0; i < TABLE_SIZE; i++)
+        {
+            printf("%.15f,\n", tan_table[i]);
+        }
+        printf("};\n");
+
+        printf("const double arcsin_table[TABLE_SIZE]=\n");
+        printf("{\n");
+        for (int i = 0; i < TABLE_SIZE; i++)
+        {
+            printf("%.15f,\n", arcsin_table[i]);
+        }
+        printf("};\n");
+
+        //printf("const double arccos_table[TABLE_SIZE]=\n");
+        //printf("{\n");
+        //for (int i = 0; i < TABLE_SIZE; i++)
+        //{
+        //    printf("%.15f,\n", arccos_table[i]);
+        //}
+        //printf("};\n");
+
+        printf("const double arctan_table[TABLE_SIZE]=\n");
+        printf("{\n");
+        for (int i = 0; i < TABLE_SIZE; i++)
+        {
+            printf("%.15f,\n", arctan_table[i]);
+        }
+        printf("};\n");
+    
+}
 
 int main() {
     // 初始表
-    //init_tables();
+    init_tables();
     // 测试
     //for (int i = 0; i < TABLE_SIZE; i++)
     //{
@@ -267,10 +308,45 @@ int main() {
 
     //for (double i = 0; i <= M_PI_D2; i+= RADIAN_STEP)
     //{
-    //    printf("%.5f\n", ((i ) * M_180_D_PI));
+    //    //printf("%.5f\n", ((i ) * M_180_D_PI));
+    //    printf("%.15f\n", tan_lookup(i));
+    //    //printf("%.15f\n", tan(i));
+    //}
+
+    //for (double i = -M_PI; i <= M_PI; i += 0.1)
+    //{
     //    printf("%.15f\n", tan_lookup(i));
     //    printf("%.15f\n", tan(i));
     //}
+
+    //for (double i = -100; i <= 100; i += 2)
+    //{
+    //    printf("%.15f\n", arctan_lookup(i));
+    //    printf("%.15f\n", atan(i));
+    //}
+
+    //for (double i = -3; i <= 3; i += 1)
+    //    for (double j = -3; j <= 3; j += 1)
+    //    {
+    //        printf("%.15f\n", atan2_lookup(i,j));
+    //        printf("%.15f\n", atan2(i,j));
+    //    }
+    printf("%.15f\n", atan2_lookup(100, 1));
+    printf("%.15f\n", atan2(100, 1));
+    printf("%.15f\n", atan2_lookup(100, -1));
+    printf("%.15f\n", atan2(100, -1));
+    printf("%.15f\n", atan2_lookup(-100, 1));
+    printf("%.15f\n", atan2(-100, 1));
+    printf("%.15f\n", atan2_lookup(-100, -1));
+    printf("%.15f\n", atan2(-100, -1));
+    printf("%.15f\n", atan2_lookup(1, 100));
+    printf("%.15f\n", atan2(1, 100));
+    printf("%.15f\n", atan2_lookup(1, -100));
+    printf("%.15f\n", atan2(1, -100));
+    printf("%.15f\n", atan2_lookup(-1, 100));
+    printf("%.15f\n", atan2(-1, 100));
+    printf("%.15f\n", atan2_lookup(-1, -100));
+    printf("%.15f\n", atan2(-1, -100));
 
     //printf("%.15f\n", sin_lookup(((M_PI / 6) + 0)));
     //printf("%.15f\n", sin_lookup(((M_PI / 4) + 0)));
@@ -283,11 +359,11 @@ int main() {
     //printf("%.15f\n", sin((M_PI / 3) + M_PI_D2));
 
     //printf("TABLE_SIZE=%d\n", TABLE_SIZE);
-    for (int i = 0; i < 10; i++)
-    {
-        printf("%.3f\n", my_pow(i*1.7,3));
-        printf("%.3f\n", pow(i * 1.7, 3));
-    }
+    //for (int i = 0; i < 10; i++)
+    //{
+    //    printf("%.3f\n", my_pow(i*1.7,3));
+    //    printf("%.3f\n", pow(i * 1.7, 3));
+    //}
 
     
 
