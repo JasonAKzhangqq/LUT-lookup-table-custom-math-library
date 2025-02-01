@@ -71,6 +71,16 @@ double sqrt_newton(double a) {
     return x1;
 }
 
+// 自定义实现的 pow 函数，只考虑正数次幂
+double my_pow(double base, int exponent) {
+    double result = 1.0;
+    // 通过循环将 base 乘以自身 exponent 次
+    for (int i = 0; i < exponent; i++) {
+        result *= base;
+    }
+    return result;
+}
+
 // 二分法查表
 int find_closest_index(double value, double* table) {
     int left = 0;
@@ -273,11 +283,11 @@ int main() {
     //printf("%.15f\n", sin((M_PI / 3) + M_PI_D2));
 
     //printf("TABLE_SIZE=%d\n", TABLE_SIZE);
-    //for (int i = 0; i < 100; i++)
-    //{
-    //    printf("%.3f\n", sqrt_newton(i*13));
-    //    printf("%.3f\n", sqrt(i*13));
-    //}
+    for (int i = 0; i < 10; i++)
+    {
+        printf("%.3f\n", my_pow(i*1.7,3));
+        printf("%.3f\n", pow(i * 1.7, 3));
+    }
 
     
 
