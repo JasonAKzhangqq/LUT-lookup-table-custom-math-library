@@ -1,4 +1,4 @@
-﻿//#ifndef _PROGRAM_H_		//用于嵌入式编程
+﻿//#ifndef _PROGRAM_H_		/*用于嵌入式编程*/
 #define _PROGRAM_H_
 
 // 常用的值，以及相关配置
@@ -11,4 +11,6 @@
 #define RADIAN_MAX M_PI_D2
 #define RADIAN_STEP 0.001
 #define TABLE_SIZE ((int)( M_PI_D2 / RADIAN_STEP ) + 1 )//ֻ只记录0到pi/2的表
+
+//#endif	/*用于嵌入式编程*/
 

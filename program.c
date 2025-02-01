@@ -34,7 +34,43 @@ void init_tables() {
 //    }
 //    return closest_index;
 //}
-// 
+
+//浮点型绝对值
+double Abs_float(double a)
+{
+    if (a >= 0)
+    {
+        return a;
+    }
+    else
+        return (a * -(1.0));
+}
+
+//牛顿逼近法开方
+double sqrt_newton(double a) {
+    if (a < 0) {
+        return -1; // 返回错误值，表示输入无效 
+    }
+    if (a == 0) {
+        return 0;
+    }
+
+    double x0 = a / 2.0; // 初始猜测值 
+    double x1;
+    double error = 1e-2; // 设定误差阈值 
+    int max_iterations = 1000; // 最大迭代次数，防止死循环 
+
+    for (int i = 0; i < max_iterations; ++i) {
+        x1 = (x0 + a / x0) / 2.0; // 牛顿迭代公式 
+        if (Abs_float(x1 - x0) < error) {
+            break;
+        }
+        x0 = x1;
+    }
+
+    return x1;
+}
+
 // 二分法查表
 int find_closest_index(double value, double* table) {
     int left = 0;
@@ -210,13 +246,13 @@ double arctan_lookup(double value) {
 
 int main() {
     // 初始表
-    init_tables();
+    //init_tables();
     // 测试
-    for (int i = 0; i < TABLE_SIZE; i++)
-    {
-        printf("%.15f,\n", sin_table[i]);
-        printf("%.15f,\n", tan_table[i]);
-    }
+    //for (int i = 0; i < TABLE_SIZE; i++)
+    //{
+    //    printf("%.15f,\n", sin_table[i]);
+    //    printf("%.15f,\n", tan_table[i]);
+    //}
     //printf("%.15f,\n", atan(0.815298612529843));
 
     //for (double i = 0; i <= M_PI_D2; i+= RADIAN_STEP)
@@ -236,7 +272,14 @@ int main() {
     //printf("%.15f\n", sin((M_PI / 4) + M_PI_D2));
     //printf("%.15f\n", sin((M_PI / 3) + M_PI_D2));
 
-    printf("TABLE_SIZE=%d\n", TABLE_SIZE);
+    //printf("TABLE_SIZE=%d\n", TABLE_SIZE);
+    //for (int i = 0; i < 100; i++)
+    //{
+    //    printf("%.3f\n", sqrt_newton(i*13));
+    //    printf("%.3f\n", sqrt(i*13));
+    //}
+
+    
 
     return 0;
 }
