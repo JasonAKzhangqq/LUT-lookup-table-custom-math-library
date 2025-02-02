@@ -1,3 +1,4 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <math.h>
 #include "program.h"
@@ -32,17 +33,28 @@ _Bool judge_float_equal(double value_1, double value_2)
     return 0;
 }
 
+// 自定义实现的 pow 函数，只考虑正整数次幂
+double pow_custom(double base, int exponent) {
+    double result = 1.0;
+    // 通过循环将 base 乘以自身 exponent 次
+    for (int i = 0; i < exponent; i++) {
+        result *= base;
+    }
+    return result;
+}
+
 //牛顿逼近法开方
 double sqrt_newton(double a) {
     if (a < 0)return -1; // 返回错误值，表示输入无效 
-    double x0 = a / 2.0; // 初始猜测值 
+    double x0 = a / 3.0; // 初始猜测值，当求的值大，除的数越大，迭代次数越少，但同时对小数值的迭代次数会增加，自行设定
     double x1;
-    double error = 1e-2; // 设定误差阈值 
+    double error = 1e-4; // 设定误差阈值 
     int max_iterations = 1000; // 最大迭代次数，防止死循环 
 
     for (int i = 0; i < max_iterations; ++i) {
         x1 = (x0 + a / x0) / 2.0; // 牛顿迭代公式 
         if (Abs_float(x1 - x0) < error) {
+            printf("iterations time=%d\n", i);
             break;
         }
         x0 = x1;
@@ -51,28 +63,40 @@ double sqrt_newton(double a) {
     return x1;
 }
 
-//// 查表法实现sqrt
-//double sqrt_lookup(double a) {
-//    if (a < 0) return -1; // 返回错误值，表示输入无效
-//
-//    int index = find_closest_index(a, sqrt_table);
-//    if (index < TABLE_SIZE - 1) {
-//        // 线性插值
-//        return sqrt_table[index] + ((a - index * RADIAN_STEP) / RADIAN_STEP) * (sqrt_table[index + 1] - sqrt_table[index]);
-//    } else {
-//        return sqrt_table[index];
+//// deepseek生成的查表法求sqrt，能用，但考虑到sqrt的表不像三角函数那样均匀分布，
+//// 线性插值的误差会随着值的增大而增大，故放弃使用查表法算sqrt，
+//// 但有一说一算得确实快，能保证整数精度，某些场景可以使用
+//void init_sqrt_table() {
+//    for (int i = 0; i < (1 << 8); i++) {
+//        sqrt_table[i] = sqrt(i);
 //    }
 //}
+//
+//
+//double custom_sqrt(double n) {
+//    if (n < 0) {
+//        return NAN; // 处理负数情况 
+//    }
+//    if (n == 0) {
+//        return 0.0f;
+//    }
+//    int k = 0;
+//    double m = n;
+//    while (m >= (1 << 8)) {
+//        m /= 256.0f;
+//        k++;
+//    }
+//    // 现在m <256 
+//    int index = (int)m;
+//    if (index >= (1 << 8) - 1) {
+//        index = (1 << 8) - 2; // 确保index+1不超过表的范围 
+//    }
+//    double fraction = m - index;
+//    double sqrt_m = sqrt_table[index] + fraction * (sqrt_table[index + 1] - sqrt_table[index]);
+//    double result = sqrt_m * pow_custom(16.0f, k);
+//    return result;
+//}
 
-// 自定义实现的 pow 函数，只考虑正数次幂
-double my_pow(double base, int exponent) {
-    double result = 1.0;
-    // 通过循环将 base 乘以自身 exponent 次
-    for (int i = 0; i < exponent; i++) {
-        result *= base;
-    }
-    return result;
-}
 
 // 二分法，查找输入值和表相近值，返回相近值在表中的位置
 int find_closest_index(double value, double* table) {
@@ -259,31 +283,48 @@ double atan2_lookup(double y, double x) {
 
 }
 
-//打印表
-void print_table(void)
+//生成表文件
+_Bool create_table_file(void)
 {
-    
-        printf("const double sin_table[TABLE_SIZE]=\n");
-        printf("{\n");
-        for (int i = 0; i < TABLE_SIZE; i++)
-        {
-            printf("%.15f,\n", sin_table[i]);
-        }
-        printf("};\n");
+    FILE* fp;
+    fp = fopen("my_math_table.h", "w");
+    if (fp == NULL) {
+        return 0;
+    }
+    fprintf(fp, "#define _MY_MATH_TABLE_H_\n");
+    fprintf(fp, "const double sin_table[TABLE_SIZE]=\n");
+    fprintf(fp, "{\n");
+    for (int i = 0; i < TABLE_SIZE; i++)
+    {
+        fprintf(fp, "%.15f,\n", sin_table[i]);
+    }
+    fprintf(fp, "};\n");
 
-        printf("const double tan_table[TABLE_SIZE]=\n");
-        printf("{\n");
-        for (int i = 0; i < (TABLE_SIZE - 1); i++)
-        {
-            printf("%.15f,\n", tan_table[i]);
-        }
-        printf("%.1f,\n",1e15);//最后一个值是无限大
-        printf("};\n");    
+    fprintf(fp, "const double tan_table[TABLE_SIZE]=\n");
+    fprintf(fp, "{\n");
+    for (int i = 0; i < (TABLE_SIZE - 1); i++)
+    {
+        fprintf(fp, "%.15f,\n", tan_table[i]);
+    }
+    fprintf(fp, "%.1f,\n",1e15);//最后一个值是无限大
+    fprintf(fp, "};\n");
+    fclose(fp);
+    return 1;
 }
 
 int main() {
     // 初始表
     init_tables();
+    printf("%d", create_table_file());
+    //for (int i = 0; i < 20; i ++)
+    //{
+    //    printf("%d,\n", i);
+    //       //printf("%.15f,\n", custom_sqrt(i));
+    //       printf("%.15f,\n", sqrt_newton(i));
+    //       printf("%.15f,\n", sqrt(i));        
+    //}
+    //printf("%.15f,\n", pow(2, M_E));
+    
 
     //print_table();
     // 测试
@@ -370,7 +411,7 @@ int main() {
     //printf("TABLE_SIZE=%d\n", TABLE_SIZE);
     //for (int i = 0; i < 10; i++)
     //{
-    //    printf("%.3f\n", my_pow(i*1.7,3));
+    //    printf("%.3f\n", pow_custom(i*1.7,3));
     //    printf("%.3f\n", pow(i * 1.7, 3));
     //}
 
