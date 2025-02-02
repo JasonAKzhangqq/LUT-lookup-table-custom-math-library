@@ -9,7 +9,7 @@
 #define M_PI_D180  0.017453292519943        //pi/180
 #define RADIAN_MIN -M_PI_D2
 #define RADIAN_MAX M_PI_D2
-#define RADIAN_STEP 0.001
+#define RADIAN_STEP 0.0001
 #define TABLE_SIZE ((int)( M_PI_D2 / RADIAN_STEP ) + 1 )//ֻ只记录0到pi/2的表
 
 //#endif	/*用于嵌入式编程*/
@@ -28,3 +28,4 @@ arc的表都相同，由步长决定，只是在查表时查找了对应的正�
 
 ？反三角函数表可以不要，直接用步长代替（见asin内的注释代码
 */
+
