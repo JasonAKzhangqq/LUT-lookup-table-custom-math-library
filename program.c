@@ -2,34 +2,26 @@
 #include <math.h>
 #include "program.h"
 
-
 // 各个表
 double sin_table[TABLE_SIZE];
 double tan_table[TABLE_SIZE];
-double arc_table[TABLE_SIZE];
 
 // 表初始化
 void init_tables() {
     for (int i = 0; i < (TABLE_SIZE - 1); i++) {
-        double radian =((i * RADIAN_STEP));
+        double radian =(i * RADIAN_STEP);
         sin_table[i] = sin(radian);
         tan_table[i] = tan(radian);
-        arc_table[i] = RADIAN_STEP*i;
     }
     sin_table[TABLE_SIZE - 1] = 1.0;
     tan_table[TABLE_SIZE - 1] = HUGE_VAL;
-    arc_table[TABLE_SIZE - 1] = M_PI_D2;
 }
 
 //浮点型绝对值
 double Abs_float(double a)
 {
-    if (a >= 0)
-    {
-        return a;
-    }
-    else
-        return (a * -(1.0));
+    if (a >= 0)return a;
+    else return (a * -(1.0));
 }
 
 //比较浮点数是否相等
@@ -42,13 +34,7 @@ _Bool judge_float_equal(double value_1, double value_2)
 
 //牛顿逼近法开方
 double sqrt_newton(double a) {
-    if (a < 0) {
-        return -1; // 返回错误值，表示输入无效 
-    }
-    //if (a == 0) {
-    //    return 0;
-    //}
-
+    if (a < 0)return -1; // 返回错误值，表示输入无效 
     double x0 = a / 2.0; // 初始猜测值 
     double x1;
     double error = 1e-2; // 设定误差阈值 
@@ -65,6 +51,19 @@ double sqrt_newton(double a) {
     return x1;
 }
 
+//// 查表法实现sqrt
+//double sqrt_lookup(double a) {
+//    if (a < 0) return -1; // 返回错误值，表示输入无效
+//
+//    int index = find_closest_index(a, sqrt_table);
+//    if (index < TABLE_SIZE - 1) {
+//        // 线性插值
+//        return sqrt_table[index] + ((a - index * RADIAN_STEP) / RADIAN_STEP) * (sqrt_table[index + 1] - sqrt_table[index]);
+//    } else {
+//        return sqrt_table[index];
+//    }
+//}
+
 // 自定义实现的 pow 函数，只考虑正数次幂
 double my_pow(double base, int exponent) {
     double result = 1.0;
@@ -75,81 +74,69 @@ double my_pow(double base, int exponent) {
     return result;
 }
 
-// 二分法查表
+// 二分法，查找输入值和表相近值，返回相近值在表中的位置
 int find_closest_index(double value, double* table) {
     int left = 0;
     int right = TABLE_SIZE - 1;
-    int closest_index = 0;
-    double closest_diff = fabs(value - table[0]);
-
-    while (left <= right) {
-        int mid = left + (right - left) / 2;
-        double diff = fabs(value - table[mid]);
-
-        if (diff < closest_diff) {
-            closest_diff = diff;
-            closest_index = mid;
-        }
-
-        if (value < table[mid]) {
-            right = mid - 1;
-        }
-        else if (value > table[mid]) {
-            left = mid + 1;
-        }
-        else {
-            return mid; 
-        }
-    }
-
-    return closest_index;
+    int mid;
+    do{
+        mid = left + (right - left) / 2;
+        if (value < table[mid])right = mid - 1;
+        else if (value > table[mid]) left = mid + 1;
+        else return mid;//防止输入值刚好和表值相等
+    } while (left <= right);
+    return mid;
 }
 
-// 正三角函数查表
 double sin_lookup(double radian) {
-    //把输入值限制在-pi到pi
-    while (radian < -M_PI)
-    {
+    // 把输入值限制在 -pi 到 pi
+    while (radian < -M_PI) {
         radian += M_PI_M2;
     }
-    while (radian > M_PI)
-    {
+    while (radian > M_PI) {
         radian -= M_PI_M2;
     }
 
-    //查表
-    if (radian < 0)
-    {
-        if (radian < -M_PI_D2)
-        {
-            //-pi到-pi/2诱导公式
-            return -sin_table[(int)(((M_PI +radian) / RADIAN_STEP))];
+    // 查表
+    if (radian < 0) {
+        if (radian < -M_PI_D2) {
+            // -pi 到 -pi/2 诱导公式
+            int index = (int)(((M_PI + radian) / RADIAN_STEP));
+            if (index < TABLE_SIZE - 1) {
+                // 线性插值
+                return -sin_table[index] - ((M_PI + radian - index * RADIAN_STEP) / RADIAN_STEP) * (sin_table[index + 1] - sin_table[index]);
+            } else {
+                return -sin_table[index];
+            }
+        } else {
+            // -pi/2 到 0 诱导公式
+            int index = (int)(((-radian) / RADIAN_STEP));
+            if (index < TABLE_SIZE - 1) {
+                // 线性插值
+                return -sin_table[index] - ((-radian - index * RADIAN_STEP) / RADIAN_STEP) * (sin_table[index + 1] - sin_table[index]);
+            } else {
+                return -sin_table[index];
+            }
         }
-        else
-        {
-            //-pi/2到0诱导公式
-            return -sin_table[(int)(((-radian) / RADIAN_STEP))];
-        }
-    }
-    else
-    {
-        if (radian < M_PI_D2)
-        {
-            //0到pi/2直接查表
-            // return sin_table[(int)(((radian) / RADIAN_STEP) )];
+    } else {
+        if (radian < M_PI_D2) {
+            // 0 到 pi/2 直接查表
             int index = (int)(((radian) / RADIAN_STEP));
             if (index < TABLE_SIZE - 1) {
                 // 线性插值
-                double fraction = (radian - index * RADIAN_STEP) / RADIAN_STEP;
-                return sin_table[index] + fraction * (sin_table[index + 1] - sin_table[index]);
+                return sin_table[index] + ((radian - index * RADIAN_STEP) / RADIAN_STEP) * (sin_table[index + 1] - sin_table[index]);
             } else {
                 return sin_table[index];
             }
-        }
-        else
-        {
-            //pi/2到pi诱导公式
-            return sin_table[(int)(((M_PI-radian) / RADIAN_STEP)+0)];
+        } else {
+            // pi/2 到 pi 诱导公式
+            int index = (int)(((M_PI - radian) / RADIAN_STEP));
+            if (index < TABLE_SIZE - 1) {
+                // 线性插值
+                return sin_table[index] + ((M_PI - radian - index * RADIAN_STEP) / RADIAN_STEP) * (sin_table[index + 1] - sin_table[index]);
+            } else {
+                return sin_table[index];
+            }
         }
     }
 }
@@ -171,23 +158,12 @@ double tan_lookup(double radian)
     {
         radian -= M_PI;
     }
-
-    // //查表
-    // if (radian > 0)
-    // {
-    //     return tan_table[(int)((radian) / RADIAN_STEP)];
-    // }
-    // else
-    // {
-    //     return -tan_table[(int)((-radian) / RADIAN_STEP)];
-    // }
-        // 查表
+    // 查表
     if (radian > 0) {
         int index = (int)((radian) / RADIAN_STEP);
         if (index < TABLE_SIZE - 1) {
             // 线性插值
-            double fraction = (radian - index * RADIAN_STEP) / RADIAN_STEP;
-            return tan_table[index] + fraction * (tan_table[index + 1] - tan_table[index]);
+            return tan_table[index] + ((radian - index * RADIAN_STEP) / RADIAN_STEP) * (tan_table[index + 1] - tan_table[index]);
         } else {
             return tan_table[index];
         }
@@ -195,8 +171,7 @@ double tan_lookup(double radian)
         int index = (int)((-radian) / RADIAN_STEP);
         if (index < TABLE_SIZE - 1) {
             // 线性插值
-            double fraction = (-radian - index * RADIAN_STEP) / RADIAN_STEP;
-            return -tan_table[index] - fraction * (tan_table[index + 1] - tan_table[index]);
+            return -tan_table[index] - ((-radian - index * RADIAN_STEP) / RADIAN_STEP) * (tan_table[index + 1] - tan_table[index]);
         } else {
             return -tan_table[index];
         }
@@ -214,83 +189,53 @@ double arcsin_lookup(double value) {
         int index = find_closest_index(value, sin_table);
         if (index < TABLE_SIZE - 1) {
             // 线性插值
-            double fraction = (value - sin_table[index]) / (sin_table[index + 1] - sin_table[index]);
-            return arc_table[index] + fraction * (arc_table[index + 1] - arc_table[index]);
+            return RADIAN_STEP*index + ((value - sin_table[index]) / (sin_table[index + 1] - sin_table[index])) * RADIAN_STEP;
         } else {
-            return arc_table[index];
+            return M_PI_D2;//最大值再插值数组就跨界访问了
         }
     } else {
         int index = find_closest_index(-value, sin_table);
         if (index < TABLE_SIZE - 1) {
             // 线性插值
-            double fraction = (-value - sin_table[index]) / (sin_table[index + 1] - sin_table[index]);
-            return -arc_table[index] - fraction * (arc_table[index + 1] - arc_table[index]);
+            return -RADIAN_STEP*index - ((-value - sin_table[index]) / (sin_table[index + 1] - sin_table[index])) * RADIAN_STEP;
         } else {
-            return -arc_table[index];
+            return -M_PI_D2;//最大值再插值数组就跨界访问了
         }
     }
-
-    // if (value > 0)
-    // {
-    //     return arc_table[find_closest_index(value, sin_table)];
-    // }
-    // else
-    // {
-    //     return -arc_table[find_closest_index((-value), sin_table)];
-    // }
-
-
-    //if (value > 0)
-    //{
-    //    return (RADIAN_STEP*find_closest_index(value, sin_table));
-    //}
-    //else
-    //{
-    //    return ((-RADIAN_STEP) * find_closest_index((-value), sin_table));
-    //}
 }
 
 // 利用 asin_lookup 函数计算 arccos
 double arccos_lookup(double value) {
-    return M_PI_D2 - arcsin_lookup(value);
+    //等效公式
+    return (M_PI_D2 - arcsin_lookup(value));
 }
 
 // 查表法实现atan
 double arctan_lookup(double value) {
-    // if (value > 0)
-    // {
-    //     return arc_table[find_closest_index(value, tan_table)];
-    // }
-    // else
-    // {
-    //     return -arc_table[find_closest_index((-value), tan_table)];
-    // }
         if (value > 0) {
         int index = find_closest_index(value, tan_table);
         if (index < TABLE_SIZE - 1) {
             // 线性插值
-            double fraction = (value - tan_table[index]) / (tan_table[index + 1] - tan_table[index]);
-            return arc_table[index] + fraction * (arc_table[index + 1] - arc_table[index]);
-        } else {
-            return arc_table[index];
+            return RADIAN_STEP * index + ((value - tan_table[index]) / (tan_table[index + 1] - tan_table[index])) * RADIAN_STEP;
+        }
+        else {
+            return M_PI_D2;//最大值再插值数组就跨界访问了
         }
     } else {
         int index = find_closest_index(-value, tan_table);
         if (index < TABLE_SIZE - 1) {
             // 线性插值
-            double fraction = (-value - tan_table[index]) / (tan_table[index + 1] - tan_table[index]);
-            return -arc_table[index] - fraction * (arc_table[index + 1] - arc_table[index]);
-        } else {
-            return -arc_table[index];
+            return -RADIAN_STEP * index - ((-value - tan_table[index]) / (tan_table[index + 1] - tan_table[index])) * RADIAN_STEP;
+        }
+        else {
+            return -M_PI_D2;//最大值再插值数组就跨界访问了
         }
     }
 }
 
 // 查表法实现atan2
 double atan2_lookup(double y, double x) {
-    double value = ((y / x));
-    double atan_value = 0;
-    if (judge_float_equal(x,0)) {
+    if (judge_float_equal(x,0.0)) {
         if (y > 0) {
             return M_PI_D2;
         }
@@ -301,17 +246,14 @@ double atan2_lookup(double y, double x) {
             return 0;
         }
     }
-
-    atan_value = arctan_lookup(value);
-
     if (x > 0) {
-        return atan_value;
+        return arctan_lookup(y / x);
     }
     else if (y >= 0) {
-        return atan_value + M_PI; 
+        return arctan_lookup(y / x) + M_PI;
     }
     else {
-        return atan_value - M_PI; 
+        return arctan_lookup(y / x) - M_PI;
     }
 
 
@@ -336,16 +278,7 @@ void print_table(void)
             printf("%.15f,\n", tan_table[i]);
         }
         printf("%.1f,\n",1e15);//最后一个值是无限大
-        printf("};\n");
-
-        printf("const double arc_table[TABLE_SIZE]=\n");
-        printf("{\n");
-        for (int i = 0; i < TABLE_SIZE; i++)
-        {
-            printf("%.15f,\n", arc_table[i]);
-        }
-        printf("};\n");
-    
+        printf("};\n");    
 }
 
 int main() {
@@ -367,12 +300,29 @@ int main() {
     //    printf("%.15f\n", tan_lookup(i));
     //    //printf("%.15f\n", tan(i));
     //}
+    //    for (double i = -M_PI_M2; i <= M_PI_M2; i += 0.1)
+    //{
+    //    printf("%.3f\n", (i* M_180_D_PI));
+    //    printf("%.15f\n", cos_lookup(i));
+    //    printf("%.15f\n", cos(i));
+    //}
+        //printf("%.15f\n", sin_lookup(M_PI_D2));
+        //printf("%.15f\n", sin(M_PI_D2));
+        //printf("%.15f\n", sin_lookup(-M_PI_D2));
+        //printf("%.15f\n", sin(-M_PI_D2));
 
     //for (double i = -M_PI_M2; i <= M_PI_M2; i += 0.1)
     //{
     //    printf("%.15f\n", tan_lookup(i));
     //    printf("%.15f\n", tan(i));
     //}
+    //printf("%.15f\n", tan_lookup(0));
+    //printf("%.15f\n", tan(0));
+    //printf("%.15f\n", tan_lookup(M_PI_D2));
+    //printf("%.15f\n", tan(M_PI_D2));
+    //printf("%.15f\n", tan_lookup(-M_PI_D2));
+    //printf("%.15f\n", tan(-M_PI_D2));
+
     //for (int i = 0; i < TABLE_SIZE; i++)
     //{
     //    printf("%.15f,\n", arc_table[i]);
@@ -382,13 +332,14 @@ int main() {
     //    printf("%.15f\n", arcsin_lookup(i));
     //    printf("%.15f\n", asin(i));
     //}
-
-    for (double i = -3; i <= 3; i += 1)
-        for (double j = -3; j <= 3; j += 1)
-        {
-            printf("%.15f\n", atan2_lookup(i,j));
-            printf("%.15f\n", atan2(i,j));
-        }
+    //atan2_lookup(0.0000, -3);
+    //for (double i = -3; i <= 3; i += 1)
+    //    for (double j = -3; j <= 3; j += 1)
+    //    {
+    //        printf("i=%f j=%f\n", i, j);
+    //        printf("%.15f\n", atan2_lookup(i,j));
+    //        printf("%.15f\n", atan2(i,j));
+    //    }
     //printf("%.15f\n", atan2_lookup(100, 1));
     //printf("%.15f\n", atan2(100, 1));
     //printf("%.15f\n", atan2_lookup(100, -1));
