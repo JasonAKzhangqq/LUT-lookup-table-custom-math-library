@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include "my_math.h"
-//#include "my_math_table.h"
-extern const double sin_table[];
-extern const double tan_table[];
+#include "my_math_table.h"
+
 //浮点型绝对值
 double Abs_float(double a)
 {
