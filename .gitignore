@@ -5,3 +5,4 @@ my_math_c_language.vcxproj
 check_my_math.c
 check_my_math.exe
 my_math_table.h
+/.vscode/
