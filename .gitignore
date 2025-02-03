@@ -2,3 +2,6 @@ my_math_c_language.vcxproj.user
 my_math_c_language.vcxproj.filters
 my_math_c_language.vcxproj
 /x64/
+check_my_math.c
+check_my_math.exe
+my_math_table.h

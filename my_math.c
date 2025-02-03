@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include "my_math.h"
-#include "my_math_table.h"
-
+//#include "my_math_table.h"
+extern const double sin_table[];
+extern const double tan_table[];
 //浮点型绝对值
 double Abs_float(double a)
 {
@@ -220,10 +221,4 @@ double atan2_lookup(double y, double x)
     else {
         return atan_lookup(y / x) - M_PI;
     }
-}
-
-int main() {
-
-
-    return 0;
 }
