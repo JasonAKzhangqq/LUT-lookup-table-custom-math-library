@@ -1,5 +1,8 @@
 # my_math
 
+#### 原始开源库链接
+https://gitee.com/jasonakzhang/my_math
+
 #### 介绍
 查表法实现数学库中的常见函数。包含sin，cos，tan，asin，acos，atan，atan2，sqrt，pow。(sqrt，pow不是查表法)
 在适中的表下以适中的效率实现适中精度，如生成的表步长为0.0001时，表文件大小为615KB，计算精度最差为小数后7位。在不严谨测试下，计算时间比math.h略长，在(1<<30)次随机值计算中查表法多了0.02秒。
