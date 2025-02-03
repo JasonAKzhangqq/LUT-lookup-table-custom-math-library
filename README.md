@@ -1,17 +1,15 @@
 # my_math
 
 #### 介绍
-测试用的库，同时兼开发自定义数学库1
+查表法实现数学库中的常见函数
+包含sin，cos，tan，asin，acos，atan，atan2，sqrt，pow
 
 #### 软件架构
-软件架构说明
+c语言编写
 
 
 #### 安装教程
-
-1.  xxxx
-2.  xxxx
-3.  xxxx
+1. 将my_math.c和my_math.h放入工程中
 
 #### 使用说明
 
